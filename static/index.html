@@ -97,6 +97,27 @@
       </section>
     </div>
 
+    <!-- Target planner -->
+    <section class="card" id="plannerCard">
+      <h2>🎯 Plan a Target</h2>
+      <p class="muted">Tell me a target and when you want it — I'll work out the monthly saving method and whether it fits your LKR <span id="planCommit">10,000</span>/month commitment.</p>
+      <div class="plan-form">
+        <label>Goal name<input type="text" id="planName" placeholder="e.g. New phone" /></label>
+        <label>Target amount (LKR)<input type="number" id="planTarget" placeholder="200000" min="1" /></label>
+        <label>Already saved (LKR)<input type="number" id="planSaved" placeholder="0" min="0" /></label>
+        <label>Plan by
+          <select id="planMode">
+            <option value="date">a target date</option>
+            <option value="monthly">a fixed monthly amount</option>
+          </select>
+        </label>
+        <label id="planDateWrap">Want it by<input type="month" id="planDate" min="2026-07" max="2030-12" /></label>
+        <label id="planMonthlyWrap" hidden>Monthly amount (LKR)<input type="number" id="planMonthly" placeholder="5000" min="1" /></label>
+        <button id="planBtn">Get savings method</button>
+      </div>
+      <div id="planResult" class="plan-result" hidden></div>
+    </section>
+
     <!-- Savings allocation -->
     <section class="card" id="allocationCard">
       <div class="card-head">
@@ -111,6 +132,7 @@
           <input type="text" id="newGoalName" placeholder="Goal name (e.g. Emergency fund)" />
           <input type="number" id="newGoalTarget" placeholder="Target amount" min="0" />
           <input type="number" id="newGoalAlloc" placeholder="Monthly allocation" min="0" />
+          <input type="month" id="newGoalDate" min="2026-07" max="2030-12" title="Target date (optional)" />
           <button id="addGoalBtn">Add goal</button>
         </div>
       </details>

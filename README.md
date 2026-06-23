@@ -44,6 +44,23 @@ split the 10,000 across goals (e.g. Bike 4,000 + House 6,000) or send it all to
 one. Each goal shows its monthly contribution and whether it was **logged this
 month**. The allocation badge warns if your splits don't add up to 10,000.
 
+Each goal also shows a **savings method** — its projected completion date at the
+current monthly allocation — and an **on-track / behind** badge against its
+target date (with the monthly amount actually needed to catch up).
+
+### 🎯 Target Planner
+Tell the app a **target** and it gives back a concrete **savings method**:
+
+- **Plan by date** — "I want LKR 200,000 by June 2028" → it computes the
+  required monthly amount, the number of months, and whether it fits inside the
+  free room in your LKR 10,000 commitment. If it doesn't fit, it tells you the
+  earliest date you *could* reach it with the room available.
+- **Plan by monthly amount** — "I can put away LKR 5,000/month" → it computes
+  how many months it takes and the completion date.
+
+One click turns the plan into a tracked goal (with the right monthly allocation
+and target date pre-filled).
+
 ### This Month's Commitment card
 - **Class installment: LKR 40,000** — paid / unpaid toggle
 - **Savings: LKR 10,000** — paid / unpaid toggle (synced with the schedule)
@@ -77,6 +94,7 @@ git-ignored. Delete it to reset all data.
 | Method | Path                              | Description                          |
 |--------|-----------------------------------|--------------------------------------|
 | GET    | `/api/dashboard`                  | Aggregated dashboard data            |
+| POST   | `/api/plan`                       | Turn a target into a savings method  |
 | GET    | `/api/schedule`                   | Full 54-entry schedule timeline      |
 | POST   | `/api/schedule/<id>`              | Update a schedule entry's status     |
 | GET/POST | `/api/config`                   | Read / update budget amounts         |

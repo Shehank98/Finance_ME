@@ -85,6 +85,8 @@ function renderAllocation(d) {
   const a = d.allocation;
   document.getElementById("allocCommitted").textContent = a.committed.toLocaleString("en-LK");
   document.getElementById("allocMonth").textContent = d.current_month_label;
+  const pc = document.getElementById("planCommit");
+  if (pc) pc.textContent = a.committed.toLocaleString("en-LK");
   const badge = document.getElementById("allocBadge");
   if (a.balanced) {
     badge.textContent = "✓ Fully allocated";
@@ -105,22 +107,40 @@ function renderAllocation(d) {
   for (const g of d.goals) {
     const el = document.createElement("div");
     el.className = "goal";
+
+    // Build the "savings method" line for this goal.
+    let plan = "";
+    if (g.monthly_allocation > 0 && g.projected_completion_label) {
+      plan = `At ${fmt(g.monthly_allocation)}/mo → reaches target by <strong>${g.projected_completion_label}</strong> (${g.months_to_go} mo)`;
+    } else if (g.monthly_allocation <= 0) {
+      plan = `No monthly allocation set yet`;
+    }
+    let track = "";
+    if (g.on_track === true && g.target_date_label) {
+      track = `<span class="goal-track on">On track for ${g.target_date_label}</span>`;
+    } else if (g.on_track === false && g.target_date_label) {
+      const need = g.required_monthly ? ` — needs ${fmt(g.required_monthly)}/mo` : "";
+      track = `<span class="goal-track off">Behind ${g.target_date_label}${need}</span>`;
+    }
+
     el.innerHTML = `
       <div class="goal-top">
-        <span class="goal-name">${escapeHtml(g.name)}</span>
+        <span class="goal-name">${escapeHtml(g.name)} ${g.target_date_label ? `<span class="muted">· by ${g.target_date_label}</span>` : ""}</span>
         <span class="goal-alloc">${fmt(g.monthly_allocation)}/mo</span>
       </div>
       <div class="goal-bar"><div class="goal-bar-fill" style="width:${Math.min(g.percent,100)}%"></div></div>
       <div class="goal-meta">
         <span>${fmt(g.total_contributed)} of ${fmt(g.target_amount)} (${g.percent}%)</span>
         <span class="goal-actions">
+          ${track}
           <span class="chip ${g.logged_this_month ? "logged" : ""}">${g.logged_this_month ? "✓ Logged" : "Not logged"}</span>
           <button class="tiny ${g.logged_this_month ? "secondary" : ""}" data-log="${g.id}">
             ${g.logged_this_month ? "Undo" : "Log this month"}
           </button>
           <button class="tiny danger" data-del="${g.id}">✕</button>
         </span>
-      </div>`;
+      </div>
+      ${plan ? `<div class="goal-meta" style="margin-top:0.35rem"><span>${plan}</span></div>` : ""}`;
     list.appendChild(el);
   }
 
@@ -187,6 +207,84 @@ async function refreshAll() {
   await loadSchedule();
 }
 
+// ---- Target planner ----
+let LAST_PLAN_INPUT = null;
+
+async function runPlan() {
+  const name = document.getElementById("planName").value.trim();
+  const target = Number(document.getElementById("planTarget").value);
+  const saved = Number(document.getElementById("planSaved").value) || 0;
+  const mode = document.getElementById("planMode").value;
+  if (!target || target <= 0) { toast("Enter a target amount"); return; }
+
+  const payload = { target_amount: target, current_saved: saved };
+  if (mode === "date") {
+    const d = document.getElementById("planDate").value;
+    if (!d) { toast("Pick a target date"); return; }
+    payload.target_date = d;
+  } else {
+    const mAmt = Number(document.getElementById("planMonthly").value);
+    if (!mAmt || mAmt <= 0) { toast("Enter a monthly amount"); return; }
+    payload.monthly_allocation = mAmt;
+  }
+
+  let plan;
+  try {
+    plan = await api("/api/plan", "POST", payload);
+  } catch (e) { toast(e.message); return; }
+
+  LAST_PLAN_INPUT = {
+    name, target, saved, mode,
+    target_date: payload.target_date || plan.completion_month,
+    monthly: plan.required_monthly,
+  };
+  renderPlanResult(plan, name);
+}
+
+function renderPlanResult(plan, name) {
+  const box = document.getElementById("planResult");
+  box.hidden = false;
+  box.classList.toggle("ok", plan.feasible);
+  box.classList.toggle("bad", !plan.feasible);
+
+  const label = name ? escapeHtml(name) : "this target";
+  const showSaveBtn = plan.feasible && plan.required_monthly > 0;
+
+  box.innerHTML = `
+    <h3>${plan.feasible ? "✅ Here's your savings method" : "⚠ This target needs a rethink"}</h3>
+    <div class="plan-numbers">
+      <div><span class="n ${plan.feasible ? "accent" : "warn"}">${fmt(plan.required_monthly)}</span><span class="muted">per month</span></div>
+      <div><span class="n">${plan.months_needed}</span><span class="muted">months</span></div>
+      <div><span class="n">${plan.completion_month_label || "—"}</span><span class="muted">${plan.target_date ? "target date" : "done by"}</span></div>
+      ${plan.remaining !== plan.target_amount ? `<div><span class="n">${fmt(plan.remaining)}</span><span class="muted">left to save</span></div>` : ""}
+    </div>
+    <p class="method">${escapeHtml(plan.summary)}</p>
+    ${showSaveBtn ? `<div class="actions"><button id="savePlanBtn">＋ Save "${label}" as a goal (${fmt(plan.required_monthly)}/mo)</button></div>` : ""}
+  `;
+
+  if (showSaveBtn) {
+    document.getElementById("savePlanBtn").addEventListener("click", savePlanAsGoal);
+  }
+}
+
+async function savePlanAsGoal() {
+  const p = LAST_PLAN_INPUT;
+  if (!p) return;
+  const name = p.name || "New goal";
+  await api("/api/goals", "POST", {
+    name,
+    target_amount: p.target,
+    monthly_allocation: p.monthly,
+    target_date: p.mode === "date" ? p.target_date : null,
+  });
+  document.getElementById("planResult").hidden = true;
+  document.getElementById("planName").value = "";
+  document.getElementById("planTarget").value = "";
+  document.getElementById("planSaved").value = "";
+  toast(`Goal "${name}" saved with ${fmt(p.monthly)}/mo`);
+  await loadDashboard();
+}
+
 // ---- Wire up events ----
 function wire() {
   document.getElementById("classToggle").addEventListener("change", async (e) => {
@@ -219,13 +317,23 @@ function wire() {
       name,
       target_amount: Number(document.getElementById("newGoalTarget").value) || 0,
       monthly_allocation: Number(document.getElementById("newGoalAlloc").value) || 0,
+      target_date: document.getElementById("newGoalDate").value || null,
     });
     document.getElementById("newGoalName").value = "";
     document.getElementById("newGoalTarget").value = "";
     document.getElementById("newGoalAlloc").value = "";
+    document.getElementById("newGoalDate").value = "";
     toast("Goal added");
     await loadDashboard();
   });
+
+  // Target planner
+  document.getElementById("planMode").addEventListener("change", (e) => {
+    const byDate = e.target.value === "date";
+    document.getElementById("planDateWrap").hidden = !byDate;
+    document.getElementById("planMonthlyWrap").hidden = byDate;
+  });
+  document.getElementById("planBtn").addEventListener("click", runPlan);
 
   // Settings modal
   const modal = document.getElementById("settingsModal");

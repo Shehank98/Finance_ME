@@ -156,6 +156,38 @@ body {
 }
 .chip.logged { background: rgba(34,197,94,0.15); color: var(--accent-2); border-color: rgba(34,197,94,0.3); }
 
+/* Target planner */
+.plan-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.7rem; margin: 1rem 0;
+  align-items: end;
+}
+@media (max-width: 640px) { .plan-form { grid-template-columns: 1fr; } }
+.plan-form label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.8rem; color: var(--muted); }
+.plan-form select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 0.7rem; border-radius: 8px; font-size: 0.9rem; }
+.plan-form button { height: 38px; }
+.plan-result {
+  margin-top: 0.5rem; padding: 1rem 1.2rem; border-radius: 10px;
+  background: var(--surface-2); border-left: 4px solid var(--accent);
+}
+.plan-result.ok { border-left-color: var(--accent-2); }
+.plan-result.bad { border-left-color: var(--warn); }
+.plan-result h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+.plan-result .method { font-size: 1.05rem; line-height: 1.6; }
+.plan-result .method strong { color: var(--text); }
+.plan-numbers { display: flex; flex-wrap: wrap; gap: 1.2rem; margin: 0.8rem 0; }
+.plan-numbers div { display: flex; flex-direction: column; }
+.plan-numbers .n { font-size: 1.25rem; font-weight: 700; }
+.plan-numbers .n.accent { color: var(--accent-2); }
+.plan-numbers .n.warn { color: var(--warn); }
+.plan-result .actions { margin-top: 0.6rem; }
+
+/* On-track badge on goals */
+.goal-track { font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 999px; border: 1px solid var(--border); }
+.goal-track.on { background: rgba(34,197,94,0.15); color: var(--accent-2); border-color: rgba(34,197,94,0.3); }
+.goal-track.off { background: rgba(245,158,11,0.15); color: var(--warn); border-color: rgba(245,158,11,0.3); }
+
 .add-goal { margin-top: 0.5rem; }
 .add-goal summary { cursor: pointer; color: var(--accent); }
 .goal-form { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 0.5rem; margin-top: 0.7rem; }

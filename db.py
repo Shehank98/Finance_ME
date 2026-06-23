@@ -66,6 +66,7 @@ def init_db():
             name               TEXT    NOT NULL,
             target_amount      INTEGER NOT NULL DEFAULT 0,
             monthly_allocation INTEGER NOT NULL DEFAULT 0,
+            target_date        TEXT,                        -- YYYY-MM the goal is wanted by
             created_at         TEXT    NOT NULL
         );
 
@@ -94,6 +95,11 @@ def init_db():
         );
         """
     )
+
+    # --- Lightweight migration: add target_date to pre-existing databases ---
+    cols = {r[1] for r in cur.execute("PRAGMA table_info(savings_goals)").fetchall()}
+    if "target_date" not in cols:
+        cur.execute("ALTER TABLE savings_goals ADD COLUMN target_date TEXT")
 
     now = date.today().isoformat()
 
@@ -131,11 +137,11 @@ def init_db():
     if existing_goals == 0:
         cur.executemany(
             """INSERT INTO savings_goals
-               (name, target_amount, monthly_allocation, created_at)
-               VALUES (?, ?, ?, ?)""",
+               (name, target_amount, monthly_allocation, target_date, created_at)
+               VALUES (?, ?, ?, ?, ?)""",
             [
-                ("House Fund", 500000, 6000, now),
-                ("Bike", 250000, 4000, now),
+                ("House Fund", 500000, 6000, "2030-12", now),
+                ("Bike", 250000, 4000, "2030-12", now),
             ],
         )
 
