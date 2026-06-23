@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finance_ME · Budget & Savings Tracker</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">₨</span>
+      <div>
+        <h1>Finance_ME</h1>
+        <p class="muted" id="todayLabel">—</p>
+      </div>
+    </div>
+    <button class="link-btn" id="settingsBtn">⚙ Budget settings</button>
+  </header>
+
+  <main class="container">
+
+    <!-- Budget formula strip -->
+    <section class="card formula-card">
+      <h2>Budget Planner</h2>
+      <div class="formula" id="formula">
+        <div class="f-item"><span class="f-amt" id="fSalary">—</span><span class="f-lbl">Salary</span></div>
+        <span class="f-op">−</span>
+        <div class="f-item"><span class="f-amt" id="fClass">—</span><span class="f-lbl">Class Installment</span></div>
+        <span class="f-op">−</span>
+        <div class="f-item"><span class="f-amt" id="fSavings">—</span><span class="f-lbl">Savings Commitment</span></div>
+        <span class="f-op">=</span>
+        <div class="f-item highlight"><span class="f-amt" id="fSpendable">—</span><span class="f-lbl">Spendable Budget</span></div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <!-- This month's commitment -->
+      <section class="card" id="commitmentCard">
+        <h2>This Month's Commitment <span class="muted" id="commitMonth"></span></h2>
+        <ul class="commit-list">
+          <li>
+            <div>
+              <strong>Class Installment</strong>
+              <span class="muted" id="commitClassAmt"></span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="classToggle" />
+              <span class="slider"></span>
+              <span class="toggle-lbl" id="classToggleLbl">Unpaid</span>
+            </label>
+          </li>
+          <li>
+            <div>
+              <strong>Savings</strong>
+              <span class="muted" id="commitSavingsAmt"></span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="savingsToggle" />
+              <span class="slider"></span>
+              <span class="toggle-lbl" id="savingsToggleLbl">Unpaid</span>
+            </label>
+          </li>
+        </ul>
+        <div class="spendable-box">
+          <div class="row">
+            <span>Spent this month</span>
+            <strong id="spentThisMonth">—</strong>
+          </div>
+          <div class="row big">
+            <span>Spendable remaining</span>
+            <strong id="spendableRemaining">—</strong>
+          </div>
+          <div class="add-expense">
+            <input type="number" id="expAmount" placeholder="Amount" min="1" />
+            <input type="text" id="expDesc" placeholder="What for?" />
+            <button id="addExpenseBtn">Log spend</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Savings progress -->
+      <section class="card" id="progressCard">
+        <h2>Savings Schedule Progress</h2>
+        <div class="progress-stats">
+          <div><span class="stat" id="totalSaved">—</span><span class="muted">Saved to date</span></div>
+          <div><span class="stat" id="totalProjected">—</span><span class="muted">Projected by 2030</span></div>
+          <div><span class="stat" id="monthsDone">—</span><span class="muted">Months completed</span></div>
+          <div><span class="stat" id="monthsLeft">—</span><span class="muted">Months remaining</span></div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p class="muted center" id="progressPct">—</p>
+        <p class="muted center" id="missedNote"></p>
+      </section>
+    </div>
+
+    <!-- Savings allocation -->
+    <section class="card" id="allocationCard">
+      <div class="card-head">
+        <h2>Savings Allocation</h2>
+        <span class="badge" id="allocBadge">—</span>
+      </div>
+      <p class="muted">Split your LKR <span id="allocCommitted">—</span> monthly saving across goals. Log each goal's contribution for <strong id="allocMonth"></strong>.</p>
+      <div id="goalsList" class="goals-list"></div>
+      <details class="add-goal">
+        <summary>+ Add a goal</summary>
+        <div class="goal-form">
+          <input type="text" id="newGoalName" placeholder="Goal name (e.g. Emergency fund)" />
+          <input type="number" id="newGoalTarget" placeholder="Target amount" min="0" />
+          <input type="number" id="newGoalAlloc" placeholder="Monthly allocation" min="0" />
+          <button id="addGoalBtn">Add goal</button>
+        </div>
+      </details>
+    </section>
+
+    <!-- Schedule timeline -->
+    <section class="card" id="scheduleCard">
+      <div class="card-head">
+        <h2>Schedule Timeline <span class="muted">(Jul 2026 – Dec 2030)</span></h2>
+        <div class="legend">
+          <span class="dot paid"></span>Paid
+          <span class="dot pending"></span>Pending
+          <span class="dot missed"></span>Missed
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="scheduleTable">
+          <thead>
+            <tr><th>Month</th><th>Amount</th><th>Status</th><th>Logged on</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="scheduleBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Settings modal -->
+  <div class="modal-backdrop" id="settingsModal" hidden>
+    <div class="modal">
+      <h2>Budget Settings</h2>
+      <label>Salary (LKR)<input type="number" id="setSalary" /></label>
+      <label>Class Installment (LKR)<input type="number" id="setClass" /></label>
+      <label>Savings Commitment (LKR)<input type="number" id="setSavings" /></label>
+      <div class="modal-actions">
+        <button class="secondary" id="cancelSettings">Cancel</button>
+        <button id="saveSettings">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
